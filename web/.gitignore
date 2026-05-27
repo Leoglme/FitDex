@@ -1,0 +1,12 @@
+.nuxt
+.output
+.data
+dist
+dev-dist
+node_modules
+.env
+*.log
+
+# Images d'exercices téléchargées (bundlées localement, voir public/exercises/README.md)
+public/exercises/*
+!public/exercises/README.md

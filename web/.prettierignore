@@ -1,0 +1,8 @@
+.nuxt
+.output
+dist
+dev-dist
+node_modules
+public/exercises
+pnpm-lock.yaml
+package-lock.json

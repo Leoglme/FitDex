@@ -1,0 +1,62 @@
+name: fitdex
+
+services:
+  mariadb:
+    container_name: fitdex-mariadb
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fitdex}
+      MYSQL_USER: ${MYSQL_USER:-fitdex}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fitdex}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    image: fitdex-api:latest
+    container_name: fitdex-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8010}:8010"
+    environment:
+      # Hôte figé "mariadb" (nom du service). Ne pas passer ${DATABASE_URL} depuis le .env hôte ici :
+      # il pointe souvent vers 127.0.0.1, ce qui casse à l'intérieur du conteneur.
+      DATABASE_URL: mysql+pymysql://fitdex:fitdex@mariadb:3306/fitdex
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:-}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
+    volumes:
+      - .:/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    command: >
+      sh -c "python migrations/run_migrations.py &&
+      python seeders/conditional_seed.py &&
+      uvicorn main:app --host 0.0.0.0 --port 8010 --reload"
+
+  phpmyadmin:
+    container_name: fitdex-phpmyadmin
+    image: phpmyadmin:5
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb_data:

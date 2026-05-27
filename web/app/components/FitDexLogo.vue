@@ -1,0 +1,33 @@
+<template>
+  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FitDex">
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#fitdex-bg)" />
+    <!-- Courbe de progression -->
+    <path
+      d="M12 44 L24 36 L34 40 L52 20"
+      stroke="#0a0a0a"
+      stroke-width="3.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity="0.85"
+    />
+    <circle cx="52" cy="20" r="3.5" fill="#0a0a0a" />
+    <!-- Haltère -->
+    <g stroke="#0a0a0a" stroke-width="3.5" stroke-linecap="round">
+      <line x1="20" y1="52" x2="44" y2="52" />
+      <line x1="18" y1="47" x2="18" y2="57" />
+      <line x1="46" y1="47" x2="46" y2="57" />
+      <line x1="13" y1="49" x2="13" y2="55" />
+      <line x1="51" y1="49" x2="51" y2="55" />
+    </g>
+    <defs>
+      <linearGradient id="fitdex-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#bef264" />
+        <stop offset="1" stop-color="#65a30d" />
+      </linearGradient>
+    </defs>
+  </svg>
+</template>
+
+<script lang="ts" setup>
+// Logo de marque FitDex : haltère stylisée + courbe de progression sur fond lime.
+</script>

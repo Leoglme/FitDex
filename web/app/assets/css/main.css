@@ -1,0 +1,115 @@
+@import 'tailwindcss' theme(static);
+@import '@nuxt/ui';
+
+@theme static {
+  --font-sans: 'Inter', 'Public Sans', sans-serif;
+
+  /* FitDex brand — primaire lime (#84cc16) énergie / progression */
+  --color-primary-50: #f7fee7;
+  --color-primary-100: #ecfccb;
+  --color-primary-200: #d9f99d;
+  --color-primary-300: #bef264;
+  --color-primary-400: #a3e635;
+  --color-primary-500: #84cc16;
+  --color-primary-600: #65a30d;
+  --color-primary-700: #4d7c0f;
+  --color-primary-800: #3f6212;
+  --color-primary-900: #365314;
+  --color-primary-950: #1a2e05;
+
+  /* Accent secondaire — vert émeraude */
+  --color-secondary-400: #34d399;
+  --color-secondary-500: #10b981;
+  --color-secondary-600: #059669;
+}
+
+@layer base {
+  button:enabled:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  [role='button']:not([aria-disabled='true']):not([data-disabled]) {
+    cursor: pointer;
+  }
+
+  /* Inputs de saisie "tunnel" : gros chiffres lisibles d'un coup d'œil pendant la séance */
+  .tunnel-input input {
+    font-size: 2.75rem;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.1;
+  }
+}
+
+@layer components {
+  /* Animation de succès "dopamine" à la fin d'une séance / d'un exercice. */
+  @keyframes fitdex-success-pop {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.12);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fitdex-success-ring {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.8;
+      box-shadow: 0 0 0 0 rgb(132 204 22 / 0.55);
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+      box-shadow: 0 0 0 28px rgb(132 204 22 / 0);
+    }
+  }
+
+  @keyframes fitdex-success-glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 0 rgb(132 204 22 / 0));
+    }
+    50% {
+      filter: drop-shadow(0 0 22px rgb(163 230 53 / 0.7));
+    }
+  }
+
+  .fitdex-success-pop {
+    animation: fitdex-success-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .fitdex-success-ring {
+    animation: fitdex-success-ring 0.9s ease-out forwards;
+  }
+
+  .fitdex-success-glow {
+    animation: fitdex-success-glow 1.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fitdex-success-pop,
+    .fitdex-success-ring,
+    .fitdex-success-glow {
+      animation: none;
+    }
+  }
+
+  /* Thème des graphiques Unovis aligné sur les tokens Nuxt UI */
+  .unovis-xy-container {
+    --vis-crosshair-line-stroke-color: var(--ui-primary);
+    --vis-crosshair-circle-stroke-color: var(--ui-bg);
+    --vis-axis-grid-color: var(--ui-border);
+    --vis-axis-tick-color: var(--ui-border);
+    --vis-axis-tick-label-color: var(--ui-text-dimmed);
+    --vis-tooltip-background-color: var(--ui-bg);
+    --vis-tooltip-border-color: var(--ui-border);
+    --vis-tooltip-text-color: var(--ui-text-highlighted);
+  }
+}

@@ -1,0 +1,24 @@
+.vscode
+.idea
+node_modules
+
+# API
+api/.venv
+api/__pycache__
+api/**/__pycache__
+api/*.pyc
+api/.env
+
+# Web
+web/.env
+web/.nuxt
+web/.output
+web/dist
+web/node_modules
+
+# Reference project copied temporarily to bootstrap init/CI — not part of FitDex
+GoupixDex/
+
+# Local Cursor / agent guidelines — not versioned
+CLAUDE.md
+.claude

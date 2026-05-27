@@ -1,45 +1,140 @@
-# FitDex 🏋️
+<p align="center">
+  <img src="web/public/favicon.svg" alt="FitDex logo" width="96" height="96" />
+</p>
 
-Suivi de progression en musculation : charges et répétitions par série, progression
-surcharge progressive, statistiques par muscle / type de séance / exercice.
+<h1 align="center">FitDex</h1>
 
-Monorepo :
+<p align="center">
+  <strong>Track your strength training progress — sets, reps, and weight, exercise by exercise.</strong>
+</p>
 
-- **`web/`** — Front Nuxt 4 (Nuxt UI 4 + Tailwind 4), PWA installable sur mobile et desktop.
-- **`api/`** — Backend FastAPI (SQLAlchemy + MariaDB), auth JWT.
+<p align="center">
+  <a href="https://fit.dibodev.fr">Live app</a>
+  ·
+  <a href="#getting-started">Getting started</a>
+  ·
+  <a href="#features">Features</a>
+  ·
+  <a href="#tech-stack">Tech stack</a>
+</p>
 
-Déployé sur **fit.dibodev.fr**.
+---
 
-## Développement local
+## Table of contents
+
+- [About](#about)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [API (FastAPI)](#api-fastapi)
+  - [Web (Nuxt)](#web-nuxt)
+- [Exercise catalog](#exercise-catalog)
+- [Code quality](#code-quality)
+- [Deployment](#deployment)
+- [Documentation](#documentation)
+
+---
+
+## About
+
+**FitDex** is a mobile-first workout tracker built for progressive overload. Log every set with reps and weight, organize workouts by day, and follow your progress over time with charts and stats.
+
+The project is a monorepo with a **Nuxt 4** frontend and a **FastAPI** backend. It is deployed at **[fit.dibodev.fr](https://fit.dibodev.fr)**.
+
+---
+
+## Features
+
+### Workout logging
+
+- **Guided logging tunnel** — step-by-step flow to enter sets, reps, and weight
+- **Smart pre-fill** — automatically loads your last performance for each exercise (set count, reps, and weight)
+- **Session tracking** — log multiple exercises in a single workout session
+
+### Exercise management
+
+- **1,600+ exercise catalog** — browse by muscle group with anatomical illustrations
+- **Search** — find exercises quickly by name across the full catalog
+- **Custom exercises** — create and edit your own exercises when something is missing
+
+### Progress & stats
+
+- **Per-exercise charts** — max weight, top-set reps, estimated 1RM (Epley formula), and volume
+- **Volume over time** — filter by muscle group or workout day
+- **Workout days** — organize exercises into reusable templates (e.g. “Push day”, “Leg day”)
+
+### App experience
+
+- **PWA** — installable on mobile and desktop
+- **JWT authentication** — secure per-user data
+
+---
+
+## Tech stack
+
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | Nuxt 4, Vue 3, Nuxt UI 4, Tailwind CSS 4, Unovis, PWA |
+| **Backend** | FastAPI, SQLAlchemy, Pydantic, JWT |
+| **Database** | MariaDB / MySQL |
+| **Tooling** | ESLint, Prettier, vue-tsc, Husky, commitlint, GitHub Actions |
+
+---
+
+## Project structure
+
+```
+FitDex/
+├── api/                    # FastAPI backend
+│   ├── routes/             # REST endpoints (auth, catalog, sessions, stats…)
+│   ├── models/             # SQLAlchemy ORM models
+│   ├── schemas/            # Pydantic request/response schemas
+│   ├── services/           # Business logic (stats, auth…)
+│   ├── migrations/         # SQL migrations
+│   └── seeders/            # Database seeders (users, exercise catalog)
+│
+├── web/                    # Nuxt 4 frontend
+│   ├── app/
+│   │   ├── pages/          # Routes (sessions, stats, profile…)
+│   │   ├── components/     # UI components (ExercisePicker, TunnelLogger…)
+│   │   ├── composables/    # useApi, useAuth, useCatalog…
+│   │   └── types/          # Shared TypeScript types
+│   └── public/
+│       ├── exercises/      # Exercise images (~1600+)
+│       └── muscle-groups/  # Muscle group icons
+│
+└── .github/workflows/      # CI/CD (deploy-api, deploy-web)
+```
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- **Node.js** 20+ and npm
+- **Python** 3.11+
+- **MariaDB** or MySQL
 
 ### API (FastAPI)
 
 ```sh
 cd api
 python -m venv .venv
-. .venv/Scripts/activate   # Windows : .venv\Scripts\activate
+
+# Windows
+.venv\Scripts\activate
+
+# macOS / Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
-cp .env.example .env       # renseigner DATABASE_URL + JWT_SECRET
+cp .env.example .env          # Set DATABASE_URL and JWT_SECRET
 python migrations/run_migrations.py
-python seeders/run_all.py  # admin user + catalogue d'exercices
-python run_dev.py          # http://127.0.0.1:8010  (docs : /docs)
-```
-
-### Catalogue d'exercices (~1600+, images anatomiques)
-
-Sources fusionnées :
-
-- [Everkinetic](https://github.com/everkinetic/data) — illustrations 2 phases (début/fin), muscles surlignés (~290).
-- [wger](https://wger.de) — musculation salle + PNG anatomiques (~250 images).
-- [free-exercise-db](https://github.com/yuhonas/free-exercise-db) — barre, haltères, machines, poulie, poids du corps (~570 images de repli).
-
-```sh
-cd api
-pip install -r requirements.txt           # Pillow requis pour fusionner les 2 frames Everkinetic
-python scripts/build_catalog.py           # ~1635 exercices -> seeders/data/exercises_catalog.json
-python scripts/fetch_exercise_images.py   # web/public/exercises/<slug>.{jpg,png} (long, réseau)
-python scripts/fetch_muscle_group_images.py
-python seeders/conditional_seed.py        # synchronise la base (idempotent)
+python seeders/run_all.py     # Admin user + exercise catalog
+python run_dev.py             # http://127.0.0.1:8010  (docs: /docs)
 ```
 
 ### Web (Nuxt)
@@ -47,26 +142,80 @@ python seeders/conditional_seed.py        # synchronise la base (idempotent)
 ```sh
 cd web
 npm install
-cp .env.example .env       # NUXT_PUBLIC_API_BASE=http://127.0.0.1:8010
-npm run dev                # http://localhost:3000
+cp .env.example .env            # NUXT_PUBLIC_API_BASE=http://127.0.0.1:8010
+npm run dev                     # http://localhost:3000
 ```
 
-## Qualité de code
+Open the web app, register or log in, create a workout day, add exercises, and start logging.
 
-- Front : `npm run lint` (prettier + eslint + vue-tsc). Husky lance le lint au pre-commit.
-- API : typage strict (pyright) + classes. Voir `STANDARDS_CODE_ET_ARCHITECTURE.md`.
-- Commits : Conventional Commits (validés par commitlint au commit-msg).
+---
 
-## Déploiement
+## Exercise catalog
 
-CI GitHub Actions :
+FitDex ships with a large exercise library built from merged open sources:
 
-- `deploy-api.yml` — venv + systemd + nginx sur le VPS (migrations + seeders au déploiement).
-- `deploy-web.yml` — build Nitro + PM2 + nginx.
+| Source | Content |
+|--------|---------|
+| [Everkinetic](https://github.com/everkinetic/data) | ~290 exercises with 2-phase anatomical illustrations |
+| [wger](https://wger.de) | ~250 gym exercises with PNG images |
+| [free-exercise-db](https://github.com/yuhonas/free-exercise-db) | ~570 barbell, dumbbell, machine, cable, and bodyweight exercises |
 
-Secrets requis : `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`,
-`DEPLOY_API_DIR`, `DEPLOY_WEB_DIR`, `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`,
-`NUXT_PUBLIC_API_BASE`, `NUXT_PUBLIC_SITE_URL`, etc.
+To rebuild the catalog locally:
 
-> Le dossier `GoupixDex/` est une copie de référence temporaire (init/CI) et n'est pas
-> versionné dans FitDex — il est ignoré par `.gitignore`.
+```sh
+cd api
+pip install -r requirements.txt
+python scripts/build_catalog.py              # → seeders/data/exercises_catalog.json
+python scripts/fetch_exercise_images.py    # → web/public/exercises/ (network-heavy)
+python scripts/fetch_muscle_group_images.py
+python seeders/conditional_seed.py           # Sync database (idempotent)
+```
+
+---
+
+## Code quality
+
+### Frontend
+
+```sh
+cd web
+npm run lint        # Prettier + ESLint + vue-tsc
+npm run lint:fix    # Auto-fix where possible
+```
+
+Husky runs lint checks on pre-commit.
+
+### Backend
+
+- Strict typing (pyright) and class-based structure
+- See [`STANDARDS_CODE_ET_ARCHITECTURE.md`](STANDARDS_CODE_ET_ARCHITECTURE.md) for full conventions
+
+### Commits
+
+Conventional Commits enforced via commitlint on `commit-msg`.
+
+---
+
+## Deployment
+
+GitHub Actions workflows handle production deployment:
+
+| Workflow | What it does |
+|----------|--------------|
+| `deploy-api.yml` | venv + systemd + nginx on VPS (migrations + seeders on deploy) |
+| `deploy-web.yml` | Nitro build + PM2 + nginx |
+
+Required secrets include: `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_API_DIR`, `DEPLOY_WEB_DIR`, `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `NUXT_PUBLIC_API_BASE`, `NUXT_PUBLIC_SITE_URL`, and related env vars.
+
+---
+
+## Documentation
+
+- **Architecture & coding standards** — [`STANDARDS_CODE_ET_ARCHITECTURE.md`](STANDARDS_CODE_ET_ARCHITECTURE.md)
+- **API docs (local)** — [http://127.0.0.1:8010/docs](http://127.0.0.1:8010/docs) when running the backend
+
+---
+
+<p align="center">
+  <sub>FitDex — built for consistent, measurable progress.</sub>
+</p>
