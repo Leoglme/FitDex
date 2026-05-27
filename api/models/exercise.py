@@ -28,8 +28,12 @@ class Exercise(Base):
     #: Chemin de l'image bundlée côté web (ex : ``/exercises/developpe-couche.jpg``).
     image_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    #: ``None`` pour le catalogue partagé ; sinon l'utilisateur propriétaire d'un exercice custom.
+    #: ``None`` pour le catalogue partagé et les exercices communautaires.
     owner_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    #: Auteur d'un exercice communautaire (``owner_user_id`` reste ``None`` pour le partage global).
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: dt.datetime.now(dt.UTC),

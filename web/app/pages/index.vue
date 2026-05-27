@@ -1,10 +1,13 @@
 <template>
   <div>
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-extrabold">Mes séances</h1>
-        <p class="text-muted text-sm">Configure tes jours, puis lance ta séance.</p>
-      </div>
+    <div>
+      <h1 class="text-2xl font-extrabold">Mes séances</h1>
+      <p class="text-muted text-sm">Configure tes jours, puis lance ta séance.</p>
+      <UButton color="primary" icon="lucide:plus" class="mt-3 w-full sm:hidden" :loading="creating" @click="onCreateDay">
+        Jour
+      </UButton>
+    </div>
+    <div class="mt-3 hidden sm:flex sm:justify-end">
       <UButton color="primary" icon="lucide:plus" :loading="creating" @click="onCreateDay">Jour</UButton>
     </div>
 
@@ -71,9 +74,6 @@ const {
   default: () => [],
 })
 
-/**
- * Crée un nouveau jour de séance (nommé "Jour N" par défaut) puis rafraîchit la liste.
- */
 async function onCreateDay(): Promise<void> {
   creating.value = true
   try {

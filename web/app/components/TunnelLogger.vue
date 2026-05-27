@@ -10,8 +10,8 @@
       <header class="border-default flex items-center gap-3 border-b px-4 py-3">
         <UButton color="neutral" variant="ghost" icon="lucide:x" aria-label="Quitter le tunnel" @click="close" />
         <img
-          v-if="props.exercise.image_path"
-          :src="props.exercise.image_path"
+          v-if="exerciseImageUrl"
+          :src="exerciseImageUrl"
           :alt="props.exercise.name_fr"
           class="h-12 w-12 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
         />
@@ -144,6 +144,7 @@
 import type { ComputedRef, PropType, Ref } from 'vue'
 import type { Exercise, LastExerciseLog, WorkoutSession } from '~/types/api'
 import type { TunnelLoggerProps } from '~/types/TunnelLogger'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 /** Une série en cours de saisie. */
 interface DraftSet {
@@ -196,6 +197,10 @@ const sets: Ref<DraftSet[]> = ref([])
 const submitting: Ref<boolean> = ref(false)
 const lastInfo: Ref<LastInfo | null> = ref(null)
 const lastSets: Ref<DraftSet[] | null> = ref(null)
+
+const exerciseImageUrl: ComputedRef<string | null> = computed(() =>
+  props.exercise ? resolveMediaUrl(props.exercise.image_path) : null,
+)
 
 /**
  * Modèle string ↔ number pour l'input du nombre de séries.

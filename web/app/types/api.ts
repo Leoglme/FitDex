@@ -54,6 +54,41 @@ export interface ExerciseInput {
   muscle_group_id: number
   equipment: Equipment
   description?: string | null
+  image_path?: string | null
+}
+
+/**
+ * Exercice machine (page réglages).
+ */
+export interface MachineExercise {
+  id: number
+  name_fr: string
+  muscle_group_id: number
+  image_path: string | null
+  equipment: Equipment
+}
+
+/**
+ * Réglages machine enregistrés par l'utilisateur.
+ */
+export interface MachineSetting {
+  id: number
+  exercise_id: number
+  seat_level: number | null
+  grip_level: number | null
+  notes: string | null
+  updated_at: string
+  exercise_name?: string | null
+  exercise_image_path?: string | null
+}
+
+/**
+ * Données pour sauvegarder des réglages machine.
+ */
+export interface MachineSettingInput {
+  seat_level?: number | null
+  grip_level?: number | null
+  notes?: string | null
 }
 
 /**

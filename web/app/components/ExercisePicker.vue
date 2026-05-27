@@ -51,17 +51,19 @@
             v-for="group in muscleGroups"
             :key="group.id"
             type="button"
-            class="hover:border-primary hover:bg-elevated border-default bg-elevated/40 flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-colors"
+            class="hover:border-primary hover:bg-elevated border-default bg-elevated/40 flex flex-col items-center gap-3 rounded-xl border p-4 text-center transition-colors"
             @click="onSelectGroup(group)"
           >
-            <img
-              v-if="isMuscleGroupImage(group.icon)"
-              :src="group.icon!"
-              :alt="group.name_fr"
-              class="h-14 w-14 object-contain"
-              loading="lazy"
-            />
-            <UIcon v-else :name="group.icon ?? 'lucide:dumbbell'" class="text-primary h-7 w-7" />
+            <div
+              class="flex h-16 w-16 items-center justify-center rounded-2xl"
+              :class="muscleGroupVisual(group.slug).bgClass"
+            >
+              <UIcon
+                :name="muscleGroupVisual(group.slug).icon"
+                class="h-9 w-9"
+                :class="muscleGroupVisual(group.slug).iconClass"
+              />
+            </div>
             <span class="text-sm leading-tight font-semibold">{{ group.name_fr }}</span>
           </button>
         </div>
@@ -104,7 +106,7 @@
 import type { PropType, Ref } from 'vue'
 import type { Exercise, MuscleGroup } from '~/types/api'
 import type { ExercisePickerProps } from '~/types/ExercisePicker'
-import { isMuscleGroupImage } from '~/utils/muscleGroup'
+import { muscleGroupVisual } from '~/utils/muscleGroupVisual'
 
 /**
  * Définit les props du composant ExercisePicker.

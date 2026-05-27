@@ -37,18 +37,20 @@ class ExercisePublic(BaseModel):
 
 
 class ExerciseCreate(BaseModel):
-    """Création d'un exercice personnalisé."""
+    """Création d'un exercice communautaire."""
 
     name_fr: str = Field(min_length=1, max_length=120)
     muscle_group_id: int
     equipment: EquipmentType = "machine"
     description: str | None = None
+    image_path: str | None = None
 
 
 class ExerciseUpdate(BaseModel):
-    """Mise à jour d'un exercice personnalisé."""
+    """Mise à jour d'un exercice communautaire."""
 
     name_fr: str | None = Field(default=None, min_length=1, max_length=120)
     muscle_group_id: int | None = None
     equipment: EquipmentType | None = None
     description: str | None = None
+    image_path: str | None = None

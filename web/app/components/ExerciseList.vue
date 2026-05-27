@@ -6,8 +6,8 @@
       class="border-default bg-elevated/40 flex items-center gap-3 rounded-xl border p-2.5"
     >
       <img
-        v-if="exercise.image_path"
-        :src="exercise.image_path"
+        v-if="resolveMediaUrl(exercise.image_path)"
+        :src="resolveMediaUrl(exercise.image_path)!"
         :alt="exercise.name_fr"
         class="h-14 w-14 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
         loading="lazy"
@@ -19,7 +19,7 @@
         <p class="truncate text-sm font-semibold">{{ exercise.name_fr }}</p>
         <p class="text-muted truncate text-xs">
           {{ groupLabel(exercise.muscle_group_id) }} · {{ equipmentLabel(exercise.equipment) }}
-          <span v-if="exercise.is_custom" class="text-primary"> · Perso</span>
+          <span v-if="exercise.is_custom" class="text-primary"> · Communauté</span>
         </p>
       </div>
       <div class="flex shrink-0 items-center gap-1">
@@ -63,6 +63,7 @@
 import type { PropType } from 'vue'
 import type { Exercise, MuscleGroup } from '~/types/api'
 import { equipmentIcon, equipmentLabel } from '~/utils/equipment'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const props = defineProps({
   exercises: {

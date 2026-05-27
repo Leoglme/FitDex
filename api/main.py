@@ -11,14 +11,18 @@ try:
 except ImportError:
     pass
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from config import get_settings
 from routes import auth as auth_routes
 from routes import catalog as catalog_routes
+from routes import machines as machines_routes
 from routes import sessions as sessions_routes
 from routes import stats as stats_routes
 from routes import workout_days as workout_days_routes
@@ -71,6 +75,11 @@ def health() -> dict[str, str]:
 
 app.include_router(auth_routes.router)
 app.include_router(catalog_routes.router)
+app.include_router(machines_routes.router)
 app.include_router(workout_days_routes.router)
 app.include_router(sessions_routes.router)
 app.include_router(stats_routes.router)
+
+_uploads = Path(__file__).resolve().parent / "uploads"
+_uploads.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_uploads), name="uploads")

@@ -24,6 +24,10 @@
 }
 
 @layer base {
+  html {
+    touch-action: manipulation;
+  }
+
   button:enabled:not([aria-disabled='true']) {
     cursor: pointer;
   }

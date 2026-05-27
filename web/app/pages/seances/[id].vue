@@ -18,6 +18,14 @@
           </p>
         </div>
         <UButton
+          v-if="day && !sessionActive"
+          color="neutral"
+          variant="ghost"
+          icon="lucide:settings-2"
+          aria-label="Modifier le jour"
+          :to="`/seances/${dayId}/edit`"
+        />
+        <UButton
           v-if="day"
           color="neutral"
           variant="ghost"
@@ -65,8 +73,8 @@
           @keyup.enter="onExerciseClick(de.exercise)"
         >
           <img
-            v-if="de.exercise.image_path"
-            :src="de.exercise.image_path"
+            v-if="resolveMediaUrl(de.exercise.image_path)"
+            :src="resolveMediaUrl(de.exercise.image_path)!"
             :alt="de.exercise.name_fr"
             class="h-16 w-16 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
             loading="lazy"
@@ -84,15 +92,6 @@
             v-if="loggedExerciseIds.includes(de.exercise.id)"
             name="lucide:circle-check-big"
             class="text-primary h-5 w-5 shrink-0"
-          />
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="lucide:trash-2"
-            size="sm"
-            aria-label="Retirer l'exercice"
-            class="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-            @click.stop="removeExercise(de.id)"
           />
         </div>
       </div>
@@ -176,10 +175,12 @@
 <script lang="ts" setup>
 import type { ComputedRef, Ref } from 'vue'
 import type { Exercise, WorkoutDay, WorkoutSession } from '~/types/api'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
+const router = useRouter()
 const toast = useToast()
 const { apiFetch } = useApi()
 
@@ -277,19 +278,6 @@ async function addExercise(exerciseId: number): Promise<void> {
 }
 
 /**
- * Retire un exercice du jour de séance.
- * @param dayExerciseId - Identifiant de l'association jour/exercice.
- */
-async function removeExercise(dayExerciseId: number): Promise<void> {
-  try {
-    await apiFetch(`/workout-days/${dayId.value}/exercises/${dayExerciseId}`, { method: 'DELETE' })
-    await refresh()
-  } catch {
-    toast.add({ title: 'Suppression impossible.', color: 'error' })
-  }
-}
-
-/**
  * Démarre le mode séance active (bouton « Lancer la séance »).
  */
 function launchSession(): void {
@@ -361,13 +349,14 @@ function finishSession(): void {
 }
 
 /**
- * Ferme la célébration et réinitialise la séance en cours.
+ * Ferme la célébration, réinitialise la séance et retourne à l'accueil.
  */
 function onCelebrationClose(): void {
   successOpen.value = false
   sessionActive.value = false
   currentSessionId.value = null
   loggedExerciseIds.value = []
+  void router.push('/')
 }
 
 watch(

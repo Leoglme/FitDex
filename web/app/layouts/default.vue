@@ -21,12 +21,12 @@
       v-if="isAuthenticated"
       class="border-default bg-default/90 fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur"
     >
-      <div class="mx-auto grid w-full max-w-3xl grid-cols-3">
+      <div class="mx-auto grid w-full max-w-3xl grid-cols-4">
         <NuxtLink
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors"
+          class="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors sm:text-xs"
           :class="isActive(item.to) ? 'text-primary' : 'text-muted'"
         >
           <UIcon :name="item.icon" class="h-6 w-6" />
@@ -51,6 +51,7 @@ const route = useRoute()
 
 const navItems: NavItem[] = [
   { to: '/', label: 'Séances', icon: 'lucide:dumbbell' },
+  { to: '/machines', label: 'Machines', icon: 'lucide:cog' },
   { to: '/stats', label: 'Stats', icon: 'lucide:trending-up' },
   { to: '/profil', label: 'Profil', icon: 'lucide:user' },
 ]
@@ -63,6 +64,9 @@ const currentPath: ComputedRef<string> = computed(() => route.path)
  * @returns `true` si l'onglet est actif.
  */
 function isActive(to: string): boolean {
-  return to === '/' ? currentPath.value === '/' : currentPath.value.startsWith(to)
+  if (to === '/') {
+    return currentPath.value === '/' || currentPath.value.startsWith('/seances')
+  }
+  return currentPath.value.startsWith(to)
 }
 </script>

@@ -13,6 +13,7 @@ export function useCatalog(): {
   fetchExercises: (muscleGroupId: number | null, query?: string) => Promise<Exercise[]>
   createExercise: (input: ExerciseInput) => Promise<Exercise>
   updateExercise: (id: number, input: Partial<ExerciseInput>) => Promise<Exercise>
+  uploadExerciseImage: (file: File) => Promise<string>
 } {
   const { apiFetch } = useApi()
 
@@ -67,5 +68,20 @@ export function useCatalog(): {
     })
   }
 
-  return { fetchMuscleGroups, fetchExercises, createExercise, updateExercise }
+  /**
+   * Upload une image d'exercice et renvoie son chemin public.
+   * @param file - Fichier image sélectionné.
+   * @returns Le chemin d'image renvoyé par l'API.
+   */
+  async function uploadExerciseImage(file: File): Promise<string> {
+    const form = new FormData()
+    form.append('file', file)
+    const result = await apiFetch<{ image_path: string }>('/catalog/exercises/upload-image', {
+      method: 'POST',
+      body: form,
+    })
+    return result.image_path
+  }
+
+  return { fetchMuscleGroups, fetchExercises, createExercise, updateExercise, uploadExerciseImage }
 }
