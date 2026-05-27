@@ -19,16 +19,11 @@
           :key="de.id"
           class="border-default bg-elevated/40 flex items-center gap-3 rounded-xl border p-3"
         >
-          <img
-            v-if="resolveMediaUrl(de.exercise.image_path)"
-            :src="resolveMediaUrl(de.exercise.image_path)!"
+          <ExerciseImage
+            :image-path="de.exercise.image_path"
+            :equipment="de.exercise.equipment"
             :alt="de.exercise.name_fr"
-            class="h-14 w-14 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
-            loading="lazy"
           />
-          <div v-else class="bg-muted flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-            <UIcon :name="equipmentIcon(de.exercise.equipment)" class="text-muted h-5 w-5" />
-          </div>
           <div class="min-w-0 flex-1">
             <p class="truncate font-semibold">{{ de.exercise.name_fr }}</p>
             <p class="text-muted text-xs">{{ equipmentLabel(de.exercise.equipment) }}</p>
@@ -61,7 +56,6 @@
 <script lang="ts" setup>
 import type { ComputedRef, Ref } from 'vue'
 import type { WorkoutDay } from '~/types/api'
-import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 definePageMeta({ middleware: 'auth' })
 

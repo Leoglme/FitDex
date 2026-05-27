@@ -47,15 +47,13 @@
               class="hover:bg-elevated flex w-full items-center gap-3 border-b border-default p-2.5 text-left last:border-b-0"
               @click="applyMachineReference(machine)"
             >
-              <img
-                v-if="resolveMediaUrl(machine.image_path)"
-                :src="resolveMediaUrl(machine.image_path)!"
+              <ExerciseImage
+                :image-path="machine.image_path"
+                equipment="machine"
                 :alt="machine.name_fr"
-                class="h-12 w-12 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
+                img-class="h-12 w-12 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
+                placeholder-class="h-12 w-12"
               />
-              <div v-else class="bg-muted flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-                <UIcon name="lucide:cog" class="text-muted h-5 w-5" />
-              </div>
               <span class="truncate text-sm font-medium">{{ machine.name_fr }}</span>
             </button>
           </div>
@@ -63,12 +61,13 @@
 
         <UFormField label="Image" hint="Facultatif">
           <div class="flex items-center gap-3">
-            <img
-              v-if="imagePreview"
-              :src="imagePreview"
-              alt="Aperçu"
-              class="h-16 w-16 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
-            />
+        <img
+          v-if="imagePreview && !previewFailed"
+          :src="imagePreview"
+          alt="Aperçu"
+          class="h-16 w-16 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
+          @error="previewFailed = true"
+        />
             <div v-else class="bg-muted flex h-16 w-16 shrink-0 items-center justify-center rounded-lg">
               <UIcon name="lucide:image-plus" class="text-muted h-6 w-6" />
             </div>
@@ -134,6 +133,7 @@ const imagePath: Ref<string | null> = ref(null)
 const imagePreview: Ref<string | null> = ref(null)
 const submitting: Ref<boolean> = ref(false)
 const uploadingImage: Ref<boolean> = ref(false)
+const previewFailed: Ref<boolean> = ref(false)
 const machineExercises: Ref<MachineExercise[]> = ref([])
 const loadingMachines: Ref<boolean> = ref(false)
 
@@ -164,6 +164,7 @@ function resetForm(): void {
     description.value = props.exercise.description ?? ''
     imagePath.value = props.exercise.image_path
     imagePreview.value = resolveMediaUrl(props.exercise.image_path)
+    previewFailed.value = false
     return
   }
   nameFr.value = ''
@@ -172,6 +173,7 @@ function resetForm(): void {
   description.value = ''
   imagePath.value = null
   imagePreview.value = null
+  previewFailed.value = false
 }
 
 function applyMachineReference(machine: MachineExercise): void {
@@ -194,6 +196,7 @@ async function onImageSelected(event: Event): Promise<void> {
   try {
     imagePath.value = await uploadExerciseImage(file)
     imagePreview.value = resolveMediaUrl(imagePath.value)
+    previewFailed.value = false
   } catch {
     toast.add({ title: 'Impossible d’envoyer l’image.', color: 'error' })
   } finally {

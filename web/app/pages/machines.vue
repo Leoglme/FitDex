@@ -19,16 +19,11 @@
         class="border-default bg-elevated/40 hover:border-primary flex items-center gap-3 rounded-xl border p-3 text-left transition-colors"
         @click="openSetting(machine)"
       >
-        <img
-          v-if="resolveMediaUrl(machine.image_path)"
-          :src="resolveMediaUrl(machine.image_path)!"
+        <ExerciseImage
+          :image-path="machine.image_path"
+          :equipment="machine.equipment"
           :alt="machine.name_fr"
-          class="h-14 w-14 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
-          loading="lazy"
         />
-        <div v-else class="bg-muted flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-          <UIcon name="lucide:cog" class="text-muted h-5 w-5" />
-        </div>
         <div class="min-w-0 flex-1">
           <p class="truncate font-semibold">{{ machine.name_fr }}</p>
           <p v-if="savedLabel(machine.id)" class="text-primary text-xs">{{ savedLabel(machine.id) }}</p>
@@ -74,7 +69,6 @@
 <script lang="ts" setup>
 import type { ComputedRef, Ref } from 'vue'
 import type { MachineExercise, MachineSetting } from '~/types/api'
-import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 definePageMeta({ middleware: 'auth' })
 

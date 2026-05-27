@@ -72,16 +72,13 @@
           @click="onExerciseClick(de.exercise)"
           @keyup.enter="onExerciseClick(de.exercise)"
         >
-          <img
-            v-if="resolveMediaUrl(de.exercise.image_path)"
-            :src="resolveMediaUrl(de.exercise.image_path)!"
+          <ExerciseImage
+            :image-path="de.exercise.image_path"
+            :equipment="de.exercise.equipment"
             :alt="de.exercise.name_fr"
-            class="h-16 w-16 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
-            loading="lazy"
+            img-class="h-16 w-16 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
+            placeholder-class="h-14 w-14"
           />
-          <div v-else class="bg-muted flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-            <UIcon :name="equipmentIcon(de.exercise.equipment)" class="text-muted h-6 w-6" />
-          </div>
 
           <div class="min-w-0 flex-1">
             <p class="truncate font-semibold">{{ de.exercise.name_fr }}</p>
@@ -175,7 +172,6 @@
 <script lang="ts" setup>
 import type { ComputedRef, Ref } from 'vue'
 import type { Exercise, WorkoutDay, WorkoutSession } from '~/types/api'
-import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 definePageMeta({ middleware: 'auth' })
 

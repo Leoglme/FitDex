@@ -5,16 +5,12 @@
       :key="exercise.id"
       class="border-default bg-elevated/40 flex items-center gap-3 rounded-xl border p-2.5"
     >
-      <img
-        v-if="resolveMediaUrl(exercise.image_path)"
-        :src="resolveMediaUrl(exercise.image_path)!"
+      <ExerciseImage
+        :image-path="exercise.image_path"
+        :equipment="exercise.equipment"
         :alt="exercise.name_fr"
-        class="h-14 w-14 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
-        loading="lazy"
+        img-class="h-14 w-14 shrink-0 rounded-lg object-contain bg-white/90 p-0.5"
       />
-      <div v-else class="bg-muted flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-        <UIcon :name="equipmentIcon(exercise.equipment)" class="text-muted h-5 w-5" />
-      </div>
       <div class="min-w-0 flex-1">
         <p class="truncate text-sm font-semibold">{{ exercise.name_fr }}</p>
         <p class="text-muted truncate text-xs">
@@ -62,8 +58,7 @@
 <script lang="ts" setup>
 import type { PropType } from 'vue'
 import type { Exercise, MuscleGroup } from '~/types/api'
-import { equipmentIcon, equipmentLabel } from '~/utils/equipment'
-import { resolveMediaUrl } from '~/utils/mediaUrl'
+import { equipmentLabel } from '~/utils/equipment'
 
 const props = defineProps({
   exercises: {
