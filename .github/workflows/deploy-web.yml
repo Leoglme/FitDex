@@ -87,7 +87,7 @@ jobs:
         run: tar -czf nuxt-output.tar.gz -C web .output
 
       - name: Upload bundle to VPS
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
@@ -97,7 +97,7 @@ jobs:
           target: ${{ secrets.DEPLOY_WEB_DIR }}
 
       - name: Extract, PM2 & Nginx
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           DEPLOY_WEB_DIR: ${{ secrets.DEPLOY_WEB_DIR }}
           WEB_PM2_APP_NAME: ${{ secrets.WEB_PM2_APP_NAME }}
