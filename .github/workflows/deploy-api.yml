@@ -100,7 +100,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: DEPLOY_API_DIR,API_SYSTEMD_SERVICE,API_PORT,DEPLOY_USER
-          script_stop: true
+          command_timeout: 30m
           script: |
             set -euo pipefail
             TARGET="${DEPLOY_API_DIR%/}"

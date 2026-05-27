@@ -108,7 +108,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: DEPLOY_WEB_DIR,WEB_PM2_APP_NAME,WEB_APP_PORT
-          script_stop: true
+          command_timeout: 15m
           script: |
             set -euo pipefail
             DEPLOY="${DEPLOY_WEB_DIR%/}"
