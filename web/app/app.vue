@@ -10,11 +10,18 @@
 <script lang="ts" setup>
 useHead({
   htmlAttrs: { lang: 'fr' },
-  link: [{ rel: 'apple-touch-icon', href: '/icon-192.png' }],
+  title: 'FitDex',
+  titleTemplate: '%s',
+  meta: [
+    { name: 'apple-mobile-web-app-title', content: 'FitDex' },
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'application-name', content: 'FitDex' },
+  ],
+  link: [{ rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
 })
 
 useSeoMeta({
-  title: 'FitDex — Suivi de progression en musculation',
+  title: 'FitDex',
   description: 'Suis tes charges, tes répétitions et ta progression à la salle. Stats par muscle, séance et exercice.',
   ogTitle: 'FitDex',
   ogDescription: 'Suivi de progression en musculation : charges, répétitions et statistiques.',
