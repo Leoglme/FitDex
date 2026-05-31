@@ -25,7 +25,7 @@ class Exercise(Base):
     muscle_group_id: Mapped[int] = mapped_column(ForeignKey("muscle_groups.id"), index=True)
     #: Type de matériel : machine | barbell | dumbbell | cable | bodyweight | other.
     equipment: Mapped[str] = mapped_column(String(32), default="machine", server_default="machine")
-    #: Chemin de l'image bundlée côté web (ex : ``/exercises/developpe-couche.jpg``).
+    #: URL publique Supabase (catalogue ou upload communautaire).
     image_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
     #: ``None`` pour le catalogue partagé et les exercices communautaires.

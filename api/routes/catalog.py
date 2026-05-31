@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-import uuid
-from pathlib import Path
-
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
 from core.deps import CurrentUser, DbSession
 from models.exercise import Exercise
 from models.muscle_group import MuscleGroup
 from schemas.catalog import ExerciseCreate, ExercisePublic, ExerciseUpdate, MuscleGroupPublic
+from services import supabase_storage_service as storage
 from utils.slug import slugify
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
-_UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads" / "exercises"
 _ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
@@ -117,27 +114,48 @@ def create_exercise(body: ExerciseCreate, db: DbSession, user: CurrentUser) -> E
 
 @router.post("/exercises/upload-image")
 async def upload_exercise_image(
-    _user: CurrentUser,
+    user: CurrentUser,
     file: UploadFile = File(...),
 ) -> dict[str, str]:
-    """Upload une image d'exercice et renvoie son URL publique.
+    """Upload une photo pour un exercice **communautaire** (création / édition par l'utilisateur).
 
-    @param _user - Utilisateur courant.
+    Les images du catalogue officiel sont synchronisées via ``fetch_exercise_images.py``,
+    pas via cet endpoint.
+
+    @param user - Utilisateur courant.
     @param file - Fichier image (JPEG, PNG, WebP).
-    @returns Le chemin public de l'image.
+    @returns L'URL publique Supabase.
     @throws HTTPException - 400 si le type de fichier n'est pas supporté.
+    @throws HTTPException - 503 si Supabase n'est pas configuré.
     """
+    if not storage.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Stockage d'images non configuré (SUPABASE_URL, SUPABASE_API_KEY, "
+                "SUPABASE_STORAGE_BUCKET)."
+            ),
+        )
+
     if file.content_type not in _ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Format image non supporté")
 
-    ext = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" }[file.content_type]
-    _UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    filename = f"{uuid.uuid4().hex}{ext}"
-    dest = _UPLOAD_DIR / filename
     content = await file.read()
-    dest.write_bytes(content)
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Fichier vide")
 
-    return {"image_path": f"/uploads/exercises/{filename}"}
+    try:
+        public_url = await storage.upload_user_image(
+            user_id=user.id,
+            data=content,
+            original_filename=file.filename,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Échec de l'upload vers le stockage",
+        ) from exc
+    return {"image_path": public_url}
 
 
 @router.patch("/exercises/{exercise_id}", response_model=ExercisePublic)

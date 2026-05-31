@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from models.exercise import Exercise
 from models.muscle_group import MuscleGroup
+from services.supabase_storage_service import catalog_public_url, require_configured
 
 _CATALOG_PATH = Path(__file__).resolve().parent / "data" / "exercises_catalog.json"
 
@@ -46,11 +47,12 @@ def _load_catalog() -> _Catalog:
 def seed_catalog(db: Session) -> None:
     """Insère ou met à jour les groupes musculaires et exercices à partir du JSON.
 
-    Idempotent : chaque ligne est repérée par son ``slug``. ``image_path`` pointe vers
-    l'image bundlée côté web (``/exercises/<slug>.jpg``).
+    Idempotent : chaque ligne est repérée par son ``slug``. ``image_path`` est l'URL
+    publique Supabase (catalogue + machines — même source que en production).
 
     @param db - Session DB.
     """
+    require_configured()
     catalog = _load_catalog()
 
     group_id_by_slug: dict[str, int] = {}
@@ -73,8 +75,8 @@ def seed_catalog(db: Session) -> None:
         exercise.name_fr = row["name_fr"]
         exercise.muscle_group_id = group_id_by_slug[row["muscle_group"]]
         exercise.equipment = row["equipment"]
-        ext = str(row.get("image_ext") or "jpg")
-        exercise.image_path = f"/exercises/{row['slug']}.{ext}"
+        ext = str(row.get("image_ext") or "jpg").lstrip(".")
+        exercise.image_path = catalog_public_url(str(row["slug"]), ext)
         exercise.owner_user_id = None
 
     db.commit()

@@ -1,11 +1,13 @@
-"""Télécharge les images d'exercices dans ``web/public/exercises/`` (PWA hors-ligne).
+"""Synchronise les images du catalogue vers Supabase Storage (local = production).
 
 Priorité des sources (qualité visuelle) :
-1. **Everkinetic** — 2 PNG (relaxation + tension) fusionnés côte à côte (style anatomique).
-2. **wger** — PNG Everkinetic hébergés sur wger.de.
+1. **Everkinetic** — 2 PNG fusionnés en JPEG.
+2. **wger** — PNG hébergés sur wger.de.
 3. **free-exercise-db** — illustration de repli.
 
-Usage : ``python scripts/fetch_exercise_images.py``
+Chemins : ``exercises/catalog/{slug}.{ext}`` — dédup via liste Storage.
+
+Usage : ``cd api && PYTHONPATH=. python scripts/fetch_exercise_images.py``
 """
 
 from __future__ import annotations
@@ -18,8 +20,17 @@ from io import BytesIO
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(_ROOT / ".env")
+except ImportError:
+    pass
+
 _CATALOG_PATH = _ROOT / "seeders" / "data" / "exercises_catalog.json"
-_OUTPUT_DIR = _ROOT.parent / "web" / "public" / "exercises"
 
 _EVERKINETIC_PNG_BASE = "https://raw.githubusercontent.com/everkinetic/data/main/dist/png/"
 _FREE_INDEX_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json"
@@ -27,39 +38,24 @@ _FREE_IMAGE_BASE = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/m
 
 
 def _normalize(name: str) -> str:
-    """Normalise un nom pour la correspondance.
-
-    @param name - Nom d'exercice.
-    @returns Forme normalisée.
-    """
+    """Normalise un nom pour la correspondance."""
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
 def _download(url: str) -> bytes:
-    """Télécharge un fichier binaire.
-
-    @param url - URL source.
-    @returns Le contenu binaire.
-    """
+    """Télécharge un fichier binaire."""
     req = urllib.request.Request(url, headers={"User-Agent": "FitDex/1.0"})
     with urllib.request.urlopen(req, timeout=60) as resp:
         return resp.read()
 
 
-def _stitch_everkinetic(id_num: str, dest: Path) -> bool:
-    """Fusionne relaxation + tension Everkinetic en une image JPEG.
-
-    @param id_num - Identifiant Everkinetic (ex: ``0042``).
-    @param dest - Fichier de sortie.
-    @returns ``True`` si le téléchargement a réussi.
-    """
+def _stitch_everkinetic_bytes(id_num: str) -> bytes | None:
+    """Fusionne relaxation + tension Everkinetic en JPEG."""
     try:
         from PIL import Image
     except ImportError:
-        # Repli : une seule frame si Pillow absent.
         url = f"{_EVERKINETIC_PNG_BASE}{id_num}-tension.png"
-        dest.write_bytes(_download(url))
-        return True
+        return _download(url)
 
     start_url = f"{_EVERKINETIC_PNG_BASE}{id_num}-relaxation.png"
     end_url = f"{_EVERKINETIC_PNG_BASE}{id_num}-tension.png"
@@ -67,7 +63,7 @@ def _stitch_everkinetic(id_num: str, dest: Path) -> bool:
         start = Image.open(BytesIO(_download(start_url))).convert("RGB")
         end = Image.open(BytesIO(_download(end_url))).convert("RGB")
     except Exception:
-        return False
+        return None
 
     height = max(start.height, end.height)
 
@@ -82,66 +78,91 @@ def _stitch_everkinetic(id_num: str, dest: Path) -> bool:
     combined = Image.new("RGB", (start_r.width + end_r.width, height), (255, 255, 255))
     combined.paste(start_r, (0, 0))
     combined.paste(end_r, (start_r.width, 0))
-    combined.save(dest, format="JPEG", quality=88, optimize=True)
-    return True
+    out = BytesIO()
+    combined.save(out, format="JPEG", quality=88, optimize=True)
+    return out.getvalue()
+
+
+def _fetch_bytes_for_exercise(
+    ex: dict,
+    free_by_name: dict,
+) -> tuple[bytes, str] | None:
+    """Télécharge les octets image pour une entrée catalogue.
+
+    @returns ``(data, ext_sans_point)`` ou ``None``.
+    """
+    slug = str(ex["slug"])
+    ext = str(ex.get("image_ext") or "jpg").lstrip(".")
+    id_num = ex.get("everkinetic_id_num")
+    image_url = ex.get("image_url")
+    image_path = ex.get("image")
+
+    if id_num:
+        data = _stitch_everkinetic_bytes(str(id_num))
+        if data is not None:
+            return data, "jpg"
+
+    if image_url:
+        return _download(str(image_url)), ext
+
+    if image_path:
+        path = str(image_path)
+        entry = free_by_name.get(_normalize(str(ex.get("en", ""))))
+        if entry is not None:
+            images = entry.get("images")
+            if isinstance(images, list) and images:
+                path = str(images[0])
+        return _download(_FREE_IMAGE_BASE + path), "jpg"
+
+    return None
 
 
 def main() -> None:
-    """Télécharge les images du catalogue vers ``web/public/exercises/``."""
+    """Upload les images manquantes vers Supabase Storage."""
+    from services.supabase_storage_service import (
+        CATALOG_PREFIX,
+        catalog_object_path,
+        list_catalog_filenames,
+        require_configured,
+        upload_catalog_image_sync,
+    )
+
+    require_configured()
+
     catalog = json.loads(_CATALOG_PATH.read_text(encoding="utf-8"))
-    _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print("Index free-exercise-db (repli)…")
     with urllib.request.urlopen(_FREE_INDEX_URL, timeout=60) as resp:
         free_index = json.loads(resp.read().decode("utf-8"))
     free_by_name = {_normalize(str(e.get("name", ""))): e for e in free_index}
 
+    existing = list_catalog_filenames()
     downloaded = 0
     skipped = 0
     missing: list[str] = []
 
     for ex in catalog["exercises"]:
         slug = str(ex["slug"])
-        ext = str(ex.get("image_ext") or "jpg")
-        dest = _OUTPUT_DIR / f"{slug}.{ext}"
-        if dest.exists():
+        ext = str(ex.get("image_ext") or "jpg").lstrip(".")
+        filename = f"{slug}.{ext}"
+        if filename in existing:
             skipped += 1
             continue
 
-        id_num = ex.get("everkinetic_id_num")
-        image_url = ex.get("image_url")
-        image_path = ex.get("image")
-
         try:
-            if id_num:
-                jpg_dest = _OUTPUT_DIR / f"{slug}.jpg"
-                if _stitch_everkinetic(str(id_num), jpg_dest):
-                    downloaded += 1
-                    print(f"  ok [everkinetic] {slug}")
-                    continue
-            if image_url:
-                raw = _download(str(image_url))
-                dest.write_bytes(raw)
-                downloaded += 1
-                print(f"  ok [wger] {slug}")
+            result = _fetch_bytes_for_exercise(ex, free_by_name)
+            if result is None:
+                missing.append(slug)
                 continue
-            if image_path:
-                path = str(image_path)
-                entry = free_by_name.get(_normalize(str(ex.get("en", ""))))
-                if entry is not None:
-                    images = entry.get("images")
-                    if isinstance(images, list) and images:
-                        path = str(images[0])
-                free_dest = _OUTPUT_DIR / f"{slug}.jpg"
-                free_dest.write_bytes(_download(_FREE_IMAGE_BASE + path))
-                downloaded += 1
-                print(f"  ok [free-db] {slug}")
-                continue
-            missing.append(slug)
+            data, file_ext = result
+            upload_catalog_image_sync(slug=slug, ext=file_ext, data=data)
+            existing.add(f"{slug}.{file_ext}")
+            downloaded += 1
+            print(f"  ok {catalog_object_path(slug, file_ext)}")
         except Exception as exc:  # noqa: BLE001
             missing.append(f"{slug} ({exc})")
 
-    print(f"\nTermine : {downloaded} telecharge(s), {skipped} deja presents -> {_OUTPUT_DIR}")
+    print(f"\nTermine : {downloaded} ajoute(s), {skipped} deja presents -> Supabase / {CATALOG_PREFIX}")
     if missing:
         print(f"{len(missing)} sans image :", file=sys.stderr)
         for item in missing[:30]:

@@ -21,6 +21,10 @@ class AppSettings(BaseSettings):
     #: Compte admin seedé au déploiement (facultatif).
     seed_user_email: str | None = None
     seed_user_password: str | None = None
+    #: Supabase Storage (images catalogue + uploads communautaires).
+    supabase_url: str | None = None
+    supabase_api_key: str | None = None
+    supabase_storage_bucket: str | None = None
 
 
 @lru_cache

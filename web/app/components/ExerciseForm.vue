@@ -59,7 +59,7 @@
           </div>
         </UFormField>
 
-        <UFormField label="Image" hint="Facultatif">
+        <UFormField v-if="!exercise" label="Image" hint="Facultatif — photo personnelle pour la communauté">
           <div class="flex items-center gap-3">
         <img
           v-if="imagePreview && !previewFailed"

@@ -66,17 +66,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-
-      - name: Fetch exercise images into web/public/exercises
-        working-directory: api
-        run: |
-          pip install Pillow
-          python scripts/fetch_exercise_images.py
-
       - name: Write production .env (build)
         env:
           NUXT_PUBLIC_API_BASE: ${{ secrets.NUXT_PUBLIC_API_BASE }}

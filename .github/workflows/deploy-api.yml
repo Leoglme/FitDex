@@ -63,6 +63,9 @@ jobs:
           SEED_USER_EMAIL: ${{ secrets.SEED_USER_EMAIL }}
           SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
           CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
         run: |
           set -euo pipefail
           f=api/.env
@@ -72,7 +75,25 @@ jobs:
             echo "SEED_USER_EMAIL=${SEED_USER_EMAIL:-}"
             echo "SEED_USER_PASSWORD=${SEED_USER_PASSWORD:-}"
             echo "CORS_ORIGINS=${CORS_ORIGINS:-*}"
+            echo "SUPABASE_URL=${SUPABASE_URL:-}"
+            echo "SUPABASE_API_KEY=${SUPABASE_API_KEY:-}"
+            echo "SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-FitDex}"
           } > "$f"
+
+      - name: Sync catalogue images to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_API_KEY:-}" ]; then
+            echo "::error::SUPABASE_URL et SUPABASE_API_KEY sont requis pour les images du catalogue."
+            exit 1
+          fi
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+          cd api && PYTHONPATH=. python scripts/fetch_exercise_images.py
 
       - name: Pack api tree
         run: tar -czf api-bundle.tar.gz api

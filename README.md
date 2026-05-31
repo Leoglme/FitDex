@@ -102,7 +102,7 @@ FitDex/
 │   │   ├── composables/    # useApi, useAuth, useCatalog…
 │   │   └── types/          # Shared TypeScript types
 │   └── public/
-│       ├── exercises/      # Exercise images (~1600+)
+│       ├── exercises/      # Legacy (vide) — images catalogue sur Supabase
 │       └── muscle-groups/  # Muscle group icons
 │
 └── .github/workflows/      # CI/CD (deploy-api, deploy-web)
@@ -166,10 +166,20 @@ To rebuild the catalog locally:
 cd api
 pip install -r requirements.txt
 python scripts/build_catalog.py              # → seeders/data/exercises_catalog.json
-python scripts/fetch_exercise_images.py    # → web/public/exercises/ (network-heavy)
+python scripts/fetch_exercise_images.py      # → Supabase exercises/catalog/ (required)
 python scripts/fetch_muscle_group_images.py
-python seeders/conditional_seed.py           # Sync database (idempotent)
+python seeders/conditional_seed.py           # Sync database (URLs Supabase en image_path)
 ```
+
+### Exercise images (Supabase Storage — local = prod)
+
+All **catalog** images (including machines in the app) use the same Supabase URLs in dev and production. Configure in `api/.env`:
+
+- `SUPABASE_URL`, `SUPABASE_API_KEY` (service role), `SUPABASE_STORAGE_BUCKET` (e.g. `FitDex`)
+
+Create a **public** bucket in the Supabase dashboard. Run `fetch_exercise_images.py` before seeding (CI does this on API deploy). Paths: `exercises/catalog/{slug}.{ext}`.
+
+**Community exercises:** users may attach a photo only when **creating** an exercise (`exercises/users/{user_id}/…` via the API). Catalog images are never uploaded through the app UI.
 
 ---
 
@@ -205,7 +215,7 @@ GitHub Actions workflows handle production deployment:
 | `deploy-api.yml` | venv + systemd + nginx on VPS (migrations + seeders on deploy) |
 | `deploy-web.yml` | Nitro build + PM2 + nginx |
 
-Required secrets include: `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_API_DIR`, `DEPLOY_WEB_DIR`, `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `NUXT_PUBLIC_API_BASE`, `NUXT_PUBLIC_SITE_URL`, and related env vars.
+Required secrets include: `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_API_DIR`, `DEPLOY_WEB_DIR`, `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `NUXT_PUBLIC_API_BASE`, `NUXT_PUBLIC_SITE_URL`, `SUPABASE_URL`, `SUPABASE_API_KEY`, `SUPABASE_STORAGE_BUCKET`, and related env vars.
 
 ---
 
